@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTekAI — AI Automation for the Trades</title>
+  <meta name="description" content="CTekAI builds 24/7 AI voice agents and automation systems for roofers, HVAC, plumbers and electricians — so you never miss a lead again." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            body: ['Montserrat', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: '#0A0E1A',
+            magenta: '#CC00AA',
+            cyan: '#00E5D4',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --magenta: #CC00AA;
+      --cyan: #00E5D4;
+      --navy: #0A0E1A;
+      --mouse-x: 0px;
+      --mouse-y: 0px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--navy);
+      color: #e5e5e5;
+      overflow-x: hidden;
+    }
+
+    /* ─── Film Grain ─── */
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      20% { transform: translate(-15%, 5%); }
+      30% { transform: translate(7%, -25%); }
+      40% { transform: translate(-5%, 25%); }
+      50% { transform: translate(-15%, 10%); }
+      60% { transform: translate(15%, 0%); }
+      70% { transform: translate(0%, 15%); }
+      80% { transform: translate(3%, 35%); }
+      90% { transform: translate(-10%, 10%); }
+    }
+    .bg-grain::after {
+      content: "";
+      background-image: url("https://upload.wikimedia.org/wikipedia/commons/7/76/Noise.png");
+      height: 300%; width: 300%;
+      position: fixed; top: -100%; left: -100%;
+      opacity: 0.035;
+      animation: grain 8s steps(10) infinite;
+      pointer-events: none; z-index: 9998;
+    }
+
+    /* ─── Tech Grid ─── */
+    .bg-tech-grid {
+      background-size: 48px 48px;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+      mask-image: radial-gradient(ellipse at 50% 0%, black 40%, transparent 85%);
+    }
+
+    /* ─── Glow Spot ─── */
+    .glow-magenta {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(204,0,170,0.12) 0%, transparent 70%);
+      filter: blur(60px);
+    }
+    .glow-cyan {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(0,229,212,0.08) 0%, transparent 70%);
+      filter: blur(80px);
+    }
+
+    /* ─── Glass Panel ─── */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    /* ─── Technical Corner Brackets ─── */
+    .tech-border { position: relative; }
+    .tech-border::before, .tech-border::after {
+      content: ''; position: absolute; width: 10px; height: 10px;
+      transition: all 0.3s ease;
+    }
+    .tech-border::before {
+      top: -1px; left: -1px;
+      border-top: 1.5px solid var(--magenta);
+      border-left: 1.5px solid var(--magenta);
+    }
+    .tech-border::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 1.5px solid var(--magenta);
+      border-right: 1.5px solid var(--magenta);
+    }
+
+    /* ─── Spotlight Card ─── */
+    .spotlight-card {
+      position: relative; overflow: hidden;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .spotlight-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(500px circle at var(--mouse-x) var(--mouse-y),
+        rgba(204,0,170,0.07), transparent 40%);
+      opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 2;
+    }
+    .spotlight-card:hover::before { opacity: 1; }
+    .spotlight-card:hover {
+      border-color: rgba(204,0,170,0.25);
+      transform: translateY(-3px);
+    }
+
+    /* ─── Gradient Text ─── */
+    .text-gradient-magenta {
+      background: linear-gradient(135deg, #CC00AA, #00E5D4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .text-gradient-warm {
+      background: linear-gradient(135deg, #FF6BD6, #CC00AA);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── Gradient Border Card ─── */
+    .gradient-border-card {
+      position: relative;
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+    }
+    .gradient-border-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      padding: 1px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(204,0,170,0.5), rgba(0,229,212,0.3), transparent 60%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* ─── Marquee ─── */
+    .marquee-mask {
+      mask-image: linear-gradient(90deg, transparent, white 15%, white 85%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, transparent, white 15%, white 85%, transparent);
+      overflow: hidden;
+    }
+    @keyframes marqueeScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .marquee-inner { display: inline-flex; animation: marqueeScroll 28s linear infinite; }
+    .marquee-inner:hover { animation-play-state: paused; }
+
+    /* ─── Scroll Reveal ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .reveal { opacity: 0; transform: translateY(24px) scale(0.98); }
+    .reveal.visible { animation: fadeUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    .reveal-delay-1 { animation-delay: 0.1s; }
+    .reveal-delay-2 { animation-delay: 0.2s; }
+    .reveal-delay-3 { animation-delay: 0.3s; }
+    .reveal-delay-4 { animation-delay: 0.4s; }
+
+    /* ─── Nav ─── */
+    .nav-scrolled {
+      background: rgba(10,14,26,0.85) !important;
+      backdrop-filter: blur(16px) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    }
+
+    /* ─── CTA Button ─── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #CC00AA, #9900CC);
+      color: white; font-family: 'Montserrat', sans-serif;
+      font-weight: 600; font-size: 0.875rem;
+      letter-spacing: 0.02em; padding: 14px 28px;
+      border-radius: 6px; border: none; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+    .btn-primary::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(204,0,170,0.4); }
+    .btn-primary:hover::after { opacity: 1; }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: rgba(255,255,255,0.7); font-family: 'Montserrat', sans-serif;
+      font-weight: 500; font-size: 0.875rem;
+      padding: 13px 24px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(204,0,170,0.4);
+      color: white;
+      background: rgba(204,0,170,0.06);
+    }
+
+    /* ─── Section Divider Glow ─── */
+    .section-divider {
+      width: 60%; height: 1px; margin: 0 auto;
+      background: linear-gradient(90deg, transparent, rgba(204,0,170,0.3), transparent);
+    }
+
+    /* ─── Number Step ─── */
+    .step-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 5rem; font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, rgba(204,0,170,0.15), rgba(0,229,212,0.1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── Vertical Timeline Line ─── */
+    .timeline-line {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      width: 1px; top: 0; bottom: 0;
+      background: linear-gradient(to bottom, transparent, rgba(204,0,170,0.3) 20%, rgba(0,229,212,0.2) 80%, transparent);
+    }
+
+    /* ─── Icon Box ─── */
+    .icon-box {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, rgba(204,0,170,0.15), rgba(0,229,212,0.08));
+      border: 1px solid rgba(204,0,170,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: rgba(204,0,170,0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--magenta); }
+
+    /* ─── Mobile Nav ─── */
+    #mobile-menu {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    #mobile-menu.open { max-height: 400px; }
+
+    /* ─── Hero Pulse Ring ─── */
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.6; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .pulse-ring {
+      position: absolute; inset: -8px; border-radius: 50%;
+      border: 1px solid rgba(204,0,170,0.4);
+      animation: pulseRing 2s ease-out infinite;
+    }
+    .pulse-ring-2 {
+      animation-delay: 0.7s;
+    }
+
+    /* ─── Stat Counter ─── */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body class="bg-grain antialiased selection:bg-[#CC00AA] selection:text-white">
+
+  <!-- Atmospheric Background -->
+  <div class="fixed inset-0 bg-tech-grid pointer-events-none z-0"></div>
+  <div class="glow-magenta w-[700px] h-[700px] top-[-200px] left-1/2 -translate-x-1/2 z-0 fixed"></div>
+  <div class="glow-cyan w-[500px] h-[500px] bottom-[20%] right-[-100px] z-0 fixed"></div>
+
+  <!-- ═══════════════════════════ NAV ═══════════════════════════ -->
+  <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 py-4 px-6">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+
+      <!-- Logo -->
+      <a href="#" class="font-display font-bold text-xl tracking-tight">
+        <span class="text-white">CTek</span><span class="text-gradient-magenta">AI</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#services" class="text-sm text-white/50 hover:text-white transition-colors font-body font-medium tracking-wide">Services</a>
+        <a href="#how-it-works" class="text-sm text-white/50 hover:text-white transition-colors font-body font-medium tracking-wide">How it Works</a>
+        <a href="#contact" class="text-sm text-white/50 hover:text-white transition-colors font-body font-medium tracking-wide">Contact</a>
+      </div>
+
+      <!-- Desktop CTA -->
+      <div class="hidden md:flex items-center gap-3">
+        <a href="https://tally.so/r/GxlE5O" target="_blank" class="btn-primary text-sm">
+          Book a Call
+          <iconify-icon icon="solar:arrow-right-linear" width="16"></iconify-icon>
+        </a>
+      </div>
+
+      <!-- Mobile Burger -->
+      <button id="burger" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5" aria-label="Menu">
+        <span class="w-5 h-px bg-white/70 transition-all duration-300 origin-center" id="b1"></span>
+        <span class="w-5 h-px bg-white/70 transition-all duration-300" id="b2"></span>
+        <span class="w-5 h-px bg-white/70 transition-all duration-300 origin-center" id="b3"></span>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden">
+      <div class="max-w-6xl mx-auto pt-4 pb-6 flex flex-col gap-4 border-t border-white/5 mt-4">
+        <a href="#services" class="text-sm text-white/60 hover:text-white transition-colors font-body py-2" onclick="closeMobileMenu()">Services</a>
+        <a href="#how-it-works" class="text-sm text-white/60 hover:text-white transition-colors font-body py-2" onclick="closeMobileMenu()">How it Works</a>
+        <a href="#contact" class="text-sm text-white/60 hover:text-white transition-colors font-body py-2" onclick="closeMobileMenu()">Contact</a>
+        <a href="https://tally.so/r/GxlE5O" target="_blank" class="btn-primary mt-2 justify-center">
+          Book a Call
+          <iconify-icon icon="solar:arrow-right-linear" width="16"></iconify-icon>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+  <section class="relative min-h-screen flex items-center justify-center pt-24 pb-20 px-6 overflow-hidden">
+
+    <!-- Extra hero glow -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="w-[600px] h-[400px] rounded-full" style="background: radial-gradient(ellipse, rgba(204,0,170,0.08) 0%, transparent 70%); filter: blur(40px);"></div>
+    </div>
+
+    <div class="max-w-5xl mx-auto text-center relative z-10">
+
+      <!-- Eyebrow -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#CC00AA]/20 bg-[#CC00AA]/5 mb-8 reveal">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#CC00AA] animate-pulse"></span>
+        <span class="text-[11px] font-mono text-[#CC00AA] uppercase tracking-[0.2em]">AI Automation for Trades</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="font-display font-bold text-5xl md:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight mb-6 reveal reveal-delay-1">
+        Stop losing jobs<br/>
+        to <span class="text-gradient-magenta">missed calls.</span>
+      </h1>
+
+      <!-- Subline -->
+      <p class="text-lg md:text-xl text-white/50 font-body font-light max-w-2xl mx-auto leading-relaxed mb-10 reveal reveal-delay-2">
+        CTekAI builds 24/7 AI voice agents and automation systems for roofers, HVAC, plumbers and electricians — so you never miss a lead again.
+      </p>
+
+      <!-- CTAs -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 reveal reveal-delay-3">
+        <a href="https://tally.so/r/GxlE5O" target="_blank" class="btn-primary text-base px-8 py-4">
+          Book a Free AI Audit
+          <iconify-icon icon="solar:arrow-right-linear" width="18"></iconify-icon>
+        </a>
+        <a href="#how-it-works" class="btn-ghost">
+          See how it works
+        </a>
+      </div>
+
+      <!-- Stats strip -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-8 mt-16 reveal reveal-delay-4">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-3 h-3 rounded-full bg-[#CC00AA]"></div>
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring pulse-ring-2"></div>
+          </div>
+          <span class="text-sm text-white/40 font-mono">24/7 Always On</span>
+        </div>
+        <div class="hidden sm:block w-px h-8 bg-white/10"></div>
+        <div class="text-sm text-white/40 font-mono">Zero missed calls</div>
+        <div class="hidden sm:block w-px h-8 bg-white/10"></div>
+        <div class="text-sm text-white/40 font-mono">Live in weeks, not months</div>
+      </div>
+    </div>
+
+    <!-- Bottom gradient fade -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style="background: linear-gradient(to bottom, transparent, #0A0E1A);"></div>
+  </section>
+
+  <!-- ═══════════════════════════ SOCIAL PROOF BAR ═══════════════════════════ -->
+  <section class="relative py-8 border-t border-b border-white/5 overflow-hidden">
+    <div class="max-w-6xl mx-auto px-6 mb-6 text-center">
+      <p class="text-[11px] font-mono uppercase tracking-[0.2em] text-white/25">Trusted by trades businesses across the US</p>
+    </div>
+    <div class="marquee-mask">
+      <div class="marquee-inner whitespace-nowrap">
+        <!-- Set 1 -->
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Peak Roofing Co.
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          SunState HVAC
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Blue Ridge Plumbing
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Apex Electric
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Lone Star Roofing
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          CoolBreeze HVAC
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Metro Pipe Solutions
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Thunderbolt Electric
+        </span>
+        <!-- Set 2 (duplicate for seamless loop) -->
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Peak Roofing Co.
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          SunState HVAC
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Blue Ridge Plumbing
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Apex Electric
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Lone Star Roofing
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          CoolBreeze HVAC
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Metro Pipe Solutions
+        </span>
+        <span class="inline-flex items-center gap-2 mx-10 text-white/25 text-sm font-body font-medium tracking-wide">
+          <iconify-icon icon="solar:star-bold" width="12" class="text-[#CC00AA]/40"></iconify-icon>
+          Thunderbolt Electric
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PROBLEM / SOLUTION ═══════════════════════════ -->
+  <section class="relative py-28 px-6">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Section label -->
+      <div class="flex items-center gap-4 mb-6 reveal">
+        <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">The Problem</span>
+        <div class="h-px flex-1 bg-white/5"></div>
+      </div>
+
+      <!-- Headline -->
+      <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[0.95] tracking-tight mb-16 reveal reveal-delay-1">
+        You're busy running<br/>the business.<br/>
+        <span class="text-white/30">Leads are slipping<br/>through the cracks.</span>
+      </h2>
+
+      <!-- Pain point cards -->
+      <div class="grid md:grid-cols-3 gap-5 mb-14">
+
+        <!-- Card 1 -->
+        <div class="spotlight-card rounded-xl p-6 tech-border reveal">
+          <div class="icon-box mb-5">
+            <iconify-icon icon="solar:phone-calling-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <h3 class="font-display font-semibold text-lg mb-3 text-white">Missed calls after hours</h3>
+          <p class="text-sm text-white/40 font-body leading-relaxed">Every unanswered call is a job gone straight to a competitor. It doesn't matter if you call back the next morning — they've already booked someone else.</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="spotlight-card rounded-xl p-6 tech-border reveal reveal-delay-1">
+          <div class="icon-box mb-5">
+            <iconify-icon icon="solar:clock-circle-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <h3 class="font-display font-semibold text-lg mb-3 text-white">Manual follow-up eating your day</h3>
+          <p class="text-sm text-white/40 font-body leading-relaxed">Chasing leads, booking jobs, sending reminders — all done by hand. Hours every week you could be spending on the tools, not the phone.</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="spotlight-card rounded-xl p-6 tech-border reveal reveal-delay-2">
+          <div class="icon-box mb-5">
+            <iconify-icon icon="solar:chart-2-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <h3 class="font-display font-semibold text-lg mb-3 text-white">No visibility across the business</h3>
+          <p class="text-sm text-white/40 font-body leading-relaxed">Scattered data, no central view, decisions made on gut feel. You can't fix what you can't see — and right now you're flying blind.</p>
+        </div>
+      </div>
+
+      <!-- Transition line -->
+      <div class="text-center reveal">
+        <div class="inline-flex items-center gap-4 px-6 py-3 rounded-full border border-[#CC00AA]/20 bg-[#CC00AA]/5">
+          <iconify-icon icon="solar:bolt-bold" width="16" class="text-[#CC00AA]"></iconify-icon>
+          <span class="text-sm font-body font-semibold text-white">CTekAI fixes all three. Automatically.</span>
+          <iconify-icon icon="solar:bolt-bold" width="16" class="text-[#CC00AA]"></iconify-icon>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════════════════ SERVICES ═══════════════════════════ -->
+  <section id="services" class="relative py-28 px-6">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Section label -->
+      <div class="flex items-center gap-4 mb-6 reveal">
+        <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">Services</span>
+        <div class="h-px flex-1 bg-white/5"></div>
+      </div>
+
+      <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[0.95] tracking-tight mb-4 reveal reveal-delay-1">
+        What we build.
+      </h2>
+      <p class="text-lg text-white/40 font-body mb-16 reveal reveal-delay-2">AI systems that run your business while you run your crew.</p>
+
+      <!-- Service cards -->
+      <div class="grid md:grid-cols-2 gap-5">
+
+        <!-- Voice Agents -->
+        <div class="gradient-border-card p-7 spotlight-card reveal">
+          <div class="relative z-10">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="icon-box">
+                <iconify-icon icon="solar:phone-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+              </div>
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-[#CC00AA]/60">Most Popular</span>
+                <h3 class="font-display font-semibold text-xl text-white">24/7 Voice Agents</h3>
+              </div>
+            </div>
+            <p class="text-sm text-white/45 font-body leading-relaxed mb-5">AI phone agents that answer every call, qualify leads, and book appointments — even at 2am on a Sunday. Your business never sleeps.</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Inbound Calls</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Lead Qualification</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Auto Booking</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Audits -->
+        <div class="gradient-border-card p-7 spotlight-card reveal reveal-delay-1">
+          <div class="relative z-10">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="icon-box">
+                <iconify-icon icon="solar:magnifer-zoom-in-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+              </div>
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-[#00E5D4]/60">Start Here</span>
+                <h3 class="font-display font-semibold text-xl text-white">AI Audits</h3>
+              </div>
+            </div>
+            <p class="text-sm text-white/45 font-body leading-relaxed mb-5">We map your current workflow, find where revenue is leaking, and give you an exact roadmap of what to fix — and what to build first.</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Stack Review</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Revenue Leak Analysis</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Roadmap</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Done-for-You Automation -->
+        <div class="gradient-border-card p-7 spotlight-card reveal reveal-delay-2">
+          <div class="relative z-10">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="icon-box">
+                <iconify-icon icon="solar:settings-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold text-xl text-white">Done-for-You Automation</h3>
+              </div>
+            </div>
+            <p class="text-sm text-white/45 font-body leading-relaxed mb-5">End-to-end implementation across your entire lead → booking → service → follow-up workflow. We build it, you run it.</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">n8n / Make</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">CRM Integration</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Full Workflow</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Web Apps -->
+        <div class="gradient-border-card p-7 spotlight-card reveal reveal-delay-3">
+          <div class="relative z-10">
+            <div class="flex items-start gap-4 mb-5">
+              <div class="icon-box">
+                <iconify-icon icon="solar:monitor-bold-duotone" width="22" class="text-[#CC00AA]"></iconify-icon>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold text-xl text-white">Custom Web Apps</h3>
+              </div>
+            </div>
+            <p class="text-sm text-white/45 font-body leading-relaxed mb-5">Dashboards, portals, intake forms — lightweight tools built exactly to your spec. See your whole business in one place.</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Dashboards</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Client Portals</span>
+              <span class="px-3 py-1 text-[10px] font-mono text-white/30 border border-white/8 rounded-full">Intake Forms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════════════════ HOW IT WORKS ═══════════════════════════ -->
+  <section id="how-it-works" class="relative py-28 px-6">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Section label -->
+      <div class="flex items-center gap-4 mb-6 reveal">
+        <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">Process</span>
+        <div class="h-px flex-1 bg-white/5"></div>
+      </div>
+
+      <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[0.95] tracking-tight mb-4 reveal reveal-delay-1">
+        How it works.
+      </h2>
+      <p class="text-lg text-white/40 font-body mb-20 reveal reveal-delay-2">Three steps. No fluff. Live in weeks.</p>
+
+      <!-- Steps -->
+      <div class="space-y-6">
+
+        <!-- Step 1 -->
+        <div class="glass-panel rounded-xl p-8 flex flex-col md:flex-row items-start gap-8 reveal">
+          <div class="flex-shrink-0">
+            <div class="step-number">01</div>
+          </div>
+          <div class="flex-1 pt-2">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#CC00AA]/60">Audit</span>
+              <div class="h-px w-12 bg-[#CC00AA]/20"></div>
+            </div>
+            <h3 class="font-display font-semibold text-2xl text-white mb-3">We dig into your setup</h3>
+            <p class="text-sm text-white/40 font-body leading-relaxed max-w-xl">We map exactly how your leads come in, what happens to them, and where the money is leaking out. You get a clear picture of the opportunity — and a plan for what to build first.</p>
+          </div>
+          <div class="hidden md:flex flex-shrink-0 items-center justify-center w-12 h-12 rounded-full border border-[#CC00AA]/20 bg-[#CC00AA]/5">
+            <iconify-icon icon="solar:magnifer-zoom-in-bold-duotone" width="20" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="flex items-center justify-start ml-8 md:ml-14">
+          <div class="w-px h-8 bg-gradient-to-b from-[#CC00AA]/30 to-[#00E5D4]/20"></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="glass-panel rounded-xl p-8 flex flex-col md:flex-row items-start gap-8 reveal reveal-delay-1">
+          <div class="flex-shrink-0">
+            <div class="step-number">02</div>
+          </div>
+          <div class="flex-1 pt-2">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#CC00AA]/60">Build</span>
+              <div class="h-px w-12 bg-[#CC00AA]/20"></div>
+            </div>
+            <h3 class="font-display font-semibold text-2xl text-white mb-3">We design and deploy your system</h3>
+            <p class="text-sm text-white/40 font-body leading-relaxed max-w-xl">Voice agents, automations, CRM integrations — all designed for your specific workflow and deployed in weeks, not months. Built to fit your business, not the other way around.</p>
+          </div>
+          <div class="hidden md:flex flex-shrink-0 items-center justify-center w-12 h-12 rounded-full border border-[#CC00AA]/20 bg-[#CC00AA]/5">
+            <iconify-icon icon="solar:settings-bold-duotone" width="20" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="flex items-center justify-start ml-8 md:ml-14">
+          <div class="w-px h-8 bg-gradient-to-b from-[#00E5D4]/20 to-[#CC00AA]/10"></div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="glass-panel rounded-xl p-8 flex flex-col md:flex-row items-start gap-8 reveal reveal-delay-2">
+          <div class="flex-shrink-0">
+            <div class="step-number">03</div>
+          </div>
+          <div class="flex-1 pt-2">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#00E5D4]/60">Run</span>
+              <div class="h-px w-12 bg-[#00E5D4]/20"></div>
+            </div>
+            <h3 class="font-display font-semibold text-2xl text-white mb-3">Your system runs. You close more jobs.</h3>
+            <p class="text-sm text-white/40 font-body leading-relaxed max-w-xl">24/7. We monitor, optimise, and handle the tech. You focus on the work only you can do — being on the tools and growing your business.</p>
+          </div>
+          <div class="hidden md:flex flex-shrink-0 items-center justify-center w-12 h-12 rounded-full border border-[#00E5D4]/20 bg-[#00E5D4]/5">
+            <iconify-icon icon="solar:bolt-bold-duotone" width="20" class="text-[#00E5D4]"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════════════════ TESTIMONIALS ═══════════════════════════ -->
+  <section class="relative py-28 px-6">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Section label -->
+      <div class="flex items-center gap-4 mb-6 reveal">
+        <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">Testimonials</span>
+        <div class="h-px flex-1 bg-white/5"></div>
+      </div>
+
+      <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-[0.95] tracking-tight mb-16 reveal reveal-delay-1">
+        What our clients say.
+      </h2>
+
+      <div class="grid md:grid-cols-3 gap-5">
+
+        <!-- Testimonial 1 -->
+        <div class="spotlight-card rounded-xl p-6 reveal" style="border-color: rgba(204,0,170,0.15);">
+          <div class="flex gap-1 mb-4">
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <p class="text-sm text-white/55 font-body leading-relaxed mb-6 italic">"We were missing 15–20 calls a week after hours. CTekAI's voice agent caught all of them and booked jobs we never would've got. Paid for itself in the first month."</p>
+          <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#CC00AA] to-[#6600CC] flex items-center justify-center text-xs font-bold text-white font-mono">JR</div>
+            <div>
+              <div class="text-sm font-semibold text-white font-body">Jason R.</div>
+              <div class="text-[11px] text-white/35 font-mono">Peak Roofing Co., Texas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="spotlight-card rounded-xl p-6 reveal reveal-delay-1" style="border-color: rgba(204,0,170,0.15);">
+          <div class="flex gap-1 mb-4">
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <p class="text-sm text-white/55 font-body leading-relaxed mb-6 italic">"The automation they built for our dispatch workflow saves my office manager 3 hours a day. The ROI is obvious. I wish we'd done this two years ago."</p>
+          <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#0099CC] to-[#00E5D4] flex items-center justify-center text-xs font-bold text-white font-mono">MK</div>
+            <div>
+              <div class="text-sm font-semibold text-white font-body">Mike K.</div>
+              <div class="text-[11px] text-white/35 font-mono">CoolBreeze HVAC, Florida</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="spotlight-card rounded-xl p-6 reveal reveal-delay-2" style="border-color: rgba(204,0,170,0.15);">
+          <div class="flex gap-1 mb-4">
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+            <iconify-icon icon="solar:star-bold" width="14" class="text-[#CC00AA]"></iconify-icon>
+          </div>
+          <p class="text-sm text-white/55 font-body leading-relaxed mb-6 italic">"Connor built us a custom dashboard that shows every job, every lead, every invoice in one place. I finally know what's going on in my own business."</p>
+          <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#9900CC] to-[#CC00AA] flex items-center justify-center text-xs font-bold text-white font-mono">DT</div>
+            <div>
+              <div class="text-sm font-semibold text-white font-body">Dave T.</div>
+              <div class="text-[11px] text-white/35 font-mono">Blue Ridge Plumbing, Georgia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Divider -->
+  <div class="section-divider"></div>
+
+  <!-- ═══════════════════════════ CTA SECTION ═══════════════════════════ -->
+  <section id="contact" class="relative py-32 px-6 overflow-hidden">
+
+    <!-- Background gradient -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute inset-0" style="background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(204,0,170,0.08) 0%, transparent 70%);"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(204,0,170,0.3), transparent);"></div>
+    </div>
+
+    <div class="max-w-3xl mx-auto text-center relative z-10">
+
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#CC00AA]/20 bg-[#CC00AA]/5 mb-8 reveal">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#CC00AA] animate-pulse"></span>
+        <span class="text-[11px] font-mono text-[#CC00AA] uppercase tracking-[0.2em]">Free Audit — No Commitment</span>
+      </div>
+
+      <h2 class="font-display font-bold text-4xl md:text-6xl lg:text-7xl leading-[0.95] tracking-tight mb-6 reveal reveal-delay-1">
+        Ready to stop<br/>
+        <span class="text-gradient-magenta">missing leads?</span>
+      </h2>
+
+      <p class="text-lg text-white/45 font-body font-light leading-relaxed mb-10 reveal reveal-delay-2">
+        Book a free 30-minute AI audit. We'll show you exactly where you're losing revenue and what to build first. No jargon. No pressure.
+      </p>
+
+      <div class="reveal reveal-delay-3">
+        <a href="https://tally.so/r/GxlE5O" target="_blank" class="btn-primary text-base px-10 py-5 rounded-lg">
+          Book Your Free Audit
+          <iconify-icon icon="solar:arrow-right-linear" width="20"></iconify-icon>
+        </a>
+      </div>
+
+      <p class="text-xs text-white/20 font-mono mt-6 reveal reveal-delay-4">Takes 2 minutes to book. We'll do the rest.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
+
+        <!-- Logo + Tagline -->
+        <div>
+          <a href="#" class="font-display font-bold text-xl tracking-tight">
+            <span class="text-white">CTek</span><span class="text-gradient-magenta">AI</span>
+          </a>
+          <p class="text-xs text-white/25 font-mono mt-1 tracking-wide">AI automation for the trades.</p>
+        </div>
+
+        <!-- Links -->
+        <div class="flex flex-wrap gap-6">
+          <a href="#services" class="text-xs text-white/35 hover:text-white/70 transition-colors font-mono uppercase tracking-wide">Services</a>
+          <a href="#how-it-works" class="text-xs text-white/35 hover:text-white/70 transition-colors font-mono uppercase tracking-wide">How it Works</a>
+          <a href="#contact" class="text-xs text-white/35 hover:text-white/70 transition-colors font-mono uppercase tracking-wide">Contact</a>
+          <a href="https://tally.so/r/GxlE5O" target="_blank" class="text-xs text-[#CC00AA]/60 hover:text-[#CC00AA] transition-colors font-mono uppercase tracking-wide">Book a Call</a>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-6 border-t border-white/5">
+        <p class="text-xs text-white/20 font-mono">© 2026 CTekAI. All rights reserved.</p>
+        <p class="text-xs text-white/15 font-mono">Digital Solutions</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+  <script>
+    // ── Nav scroll effect ──
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 40) {
+        navbar.classList.add('nav-scrolled');
+      } else {
+        navbar.classList.remove('nav-scrolled');
+      }
+    });
+
+    // ── Mobile menu ──
+    const burger = document.getElementById('burger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const b1 = document.getElementById('b1');
+    const b2 = document.getElementById('b2');
+    const b3 = document.getElementById('b3');
+    let menuOpen = false;
+
+    burger.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('open', menuOpen);
+      b1.style.transform = menuOpen ? 'rotate(45deg) translate(4px, 4px)' : '';
+      b2.style.opacity = menuOpen ? '0' : '1';
+      b3.style.transform = menuOpen ? 'rotate(-45deg) translate(4px, -4px)' : '';
+    });
+
+    function closeMobileMenu() {
+      menuOpen = false;
+      mobileMenu.classList.remove('open');
+      b1.style.transform = '';
+      b2.style.opacity = '1';
+      b3.style.transform = '';
+    }
+
+    // ── Scroll reveal ──
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // ── Spotlight card mouse tracking ──
+    document.querySelectorAll('.spotlight-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      });
+    });
+
+    // ── Smooth scroll for anchor links ──
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
