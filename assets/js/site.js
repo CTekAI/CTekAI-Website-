@@ -79,7 +79,8 @@
   /* ---------- newsletter subscriber count (set data-subscribers on the bar) ---------- */
   document.querySelectorAll('[data-subscribers]').forEach(function (el) {
     var n = parseInt(String(el.getAttribute('data-subscribers')).replace(/[^0-9]/g, ''), 10);
-    el.textContent = n > 0 ? 'Join ' + n.toLocaleString('en-US') + '+ contractors' : '';
+    el.textContent = n > 0 ? n.toLocaleString('en-US') + '+' : '';
+    if (n > 0) el.setAttribute('title', n.toLocaleString('en-US') + '+ subscribers');
   });
 
   /* ---------- footer year ---------- */
