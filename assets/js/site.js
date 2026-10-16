@@ -76,6 +76,12 @@
     new IntersectionObserver(function (e, o) { if (e[0].isIntersecting) { play(); o.disconnect(); } }, { threshold: .4 }).observe(card);
   });
 
+  /* ---------- newsletter subscriber count (set data-subscribers on the bar) ---------- */
+  document.querySelectorAll('[data-subscribers]').forEach(function (el) {
+    var n = parseInt(String(el.getAttribute('data-subscribers')).replace(/[^0-9]/g, ''), 10);
+    el.textContent = n > 0 ? 'Join ' + n.toLocaleString('en-US') + '+ contractors' : '';
+  });
+
   /* ---------- footer year ---------- */
   document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = new Date().getFullYear(); });
 })();
